@@ -27,7 +27,19 @@ def index_articles():
 
 @app.route('/articles/<int:id>')
 def show_article(id):
-    pass
+    # Step 1: set page_views to 0 on this user's first request
+    session['page_views'] = session.get('page_views') or 0
+
+    # Step 2: count this request
+    session['page_views'] += 1
+
+    # Step 3: 3 or fewer views -> return the article as JSON
+    if session['page_views'] <= 3:
+        article = Article.query.filter(Article.id == id).first()
+        return make_response(ArticleSchema().dump(article), 200)
+
+    # More than 3 views -> paywall with a 401 status
+    return {'message': 'Maximum pageview limit reached'}, 401
 
 
 if __name__ == '__main__':
